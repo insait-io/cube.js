@@ -1,0 +1,1 @@
+{"version":3,"file":"post-install.js","sourceRoot":"","sources":["../../src/post-install.ts"],"names":[],"mappings":";;AAAA,mDAAyD;AAEzD,2CAAiD;AAEjD,CAAC,KAAK,IAAI,EAAE;IACV,IAAI;QACF,MAAM,8BAAkB,CAAC,IAAI,CAAC,CAAC;KAChC;IAAC,OAAO,CAAM,EAAE;QACf,MAAM,wBAAe,CAAC,CAAC,EAAE,mCAAmC,CAAC,CAAC;KAC/D;AACH,CAAC,CAAC,EAAE,CAAC"}

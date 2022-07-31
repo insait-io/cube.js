@@ -202,6 +202,12 @@ const variables: Record<string, (...args: any) => any> = {
     .asString(),
   databrickAcceptPolicy: () => get('CUBEJS_DB_DATABRICKS_ACCEPT_POLICY')
     .asString(),
+  // TERADATA
+  teradataUrl: () => get('CUBEJS_DB_TERADATA_URL')
+    .required()
+    .asString(),
+  teradataAcceptPolicy: () => get('CUBEJS_DB_TERADATA_ACCEPT_POLICY')
+    .asString(),
   // Redis
   redisPoolMin: () => get('CUBEJS_REDIS_POOL_MIN')
     .default('2')

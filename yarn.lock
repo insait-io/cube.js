@@ -3688,6 +3688,18 @@
   resolved "https://registry.yarnpkg.com/@cubejs-backend/dotenv/-/dotenv-9.0.2.tgz#c3679091b702f0fd38de120c5a63943fcdc0dcbf"
   integrity sha512-yC1juhXEjM7K97KfXubDm7WGipd4Lpxe+AT8XeTRE9meRULrKlw0wtE2E8AQkGOfTBn+P1SCkePQ/BzIbOh1VA==
 
+"@cubejs-backend/linter@^0.26.74":
+  version "0.26.74"
+  resolved "https://registry.yarnpkg.com/@cubejs-backend/linter/-/linter-0.26.74.tgz#6e6abb29dcdfc1f53771f17daf783ec5f3889146"
+  integrity sha512-kcEnyrlu+t1XF//RIV3Pccs5cPQ02nxE7HzGnVMdVDi9LfLieyI0YPSuA49T4wVEUYB050pVOHHRWilIAcV/gQ==
+  dependencies:
+    "@typescript-eslint/eslint-plugin" "^4.16.1"
+    "@typescript-eslint/parser" "^4.16.1"
+    eslint "^7.21.0"
+    eslint-config-airbnb-base "^14.2.1"
+    eslint-plugin-import "^2.22.1"
+    eslint-plugin-node "^9.2.0"
+
 "@cubejs-infra/node-pre-gyp-github@^1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@cubejs-infra/node-pre-gyp-github/-/node-pre-gyp-github-1.0.3.tgz#5385b5f3ed4225b3e3664db8a4be37883fce0362"
