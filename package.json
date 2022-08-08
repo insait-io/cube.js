@@ -32,9 +32,10 @@
     "@typescript-eslint/eslint-plugin": "^4.17.0",
     "core-js": "^3.6.5",
     "lerna": "^3.13.1",
+    "minimist": "1.2.6",
+    "patch-package": "^6.4.7",
     "ramda": "^0.27.0",
     "rollup-plugin-dts": "^1.1.8",
-    "patch-package": "^6.4.7",
     "whatwg-fetch": "^3.0.0"
   },
   "files": [
@@ -79,7 +80,21 @@
     "@types/node": "^12",
     "@types/ramda": "0.27.40",
     "rc-tree": "4.1.5",
-    "testcontainers": "7.12.1"
+    "testcontainers": "7.12.1",
+    "execa": "2.0.0",
+    "**/jest-changed-files/execa": "2.0.0",
+    "**/qqjs/execa": "2.0.0",
+    "**/yorkie/execa": "2.0.0",
+    "**/minimist":"1.2.6",
+    "immer":"9.0.6",
+    "ejs":"3.1.6",
+    "unset-value":"2.0.1",
+    "react-dev-utils/shell-quote":"1.7.3",
+    "**/node-gyp/tar": "4.4.19",
+    "thrift":"0.16.0",
+    "**/jshs2/lodash":"4.17.21",
+    "parse-path":"5.0.0",
+    "lerna":"4.0.0"
   },
   "license": "MIT"
 }
