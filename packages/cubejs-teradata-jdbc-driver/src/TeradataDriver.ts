@@ -38,34 +38,34 @@ type ShowTableRow = {
 };
 
 const TeradataToGenericType: Record<string, string> = {
-  A1: 'ARRAY',
-  AN: 'MULTI-DIMENSIONAL ARRAY',
-  AT: 'TIME',
-  BF: 'BYTE',
-  BO: 'BLOB',
-  BV: 'VARBYTE',
+  A1: 'ARRAY', // not supported
+  AN: 'MULTI-DIMENSIONAL ARRAY', // not supported
+  AT: 'time',
+  BF: 'BYTE', // not supported
+  BO: 'BLOB', // not supported
+  BV: 'VARBYTE', // not supported
   CF: 'CHARACTER',
   CO: 'CLOB',
-  CV: 'VARCHAR',
-  D: 'DECIMAL',
-  DA: 'DATE',
+  CV: 'varchar',
+  D: 'dec',
+  DA: 'date',
   DH: 'INTERVAL DAY TO HOUR',
   DM: 'INTERVAL DAY TO MINUTE',
   DS: 'INTERVAL DAY TO SECOND',
   DY: 'INTERVAL DAY',
-  F: 'FLOAT',
+  F: 'numb',
   HM: 'INTERVAL HOUR TO MINUTE',
   HS: 'INTERVAL HOUR TO SECOND',
   HR: 'INTERVAL HOUR',
-  I: 'INTEGER',
-  I1: 'BYTEINT',
-  I2: 'SMALLINT',
+  I: 'int',
+  I1: 'int',
+  I2: 'int',
   I8: 'bigint',
-  JN: 'JSON',
-  MI: 'INTERVAL MINUTE',
+  JN: 'JSON', // not supported
+  MI: 'INTERVAL MINUTE', 
   MO: 'INTERVAL MONTH',
   MS: 'INTERVAL MINUTE TO SECOND',
-  N: 'NUMBER',
+  N: 'numb',
   PD: 'PERIOD(DATE)',
   PM: 'PERIOD(TIMESTAMP WITH TIME ZONE)',
   PS: 'PERIOD(TIMESTAMP)',
@@ -121,34 +121,46 @@ export class TeradataDriver extends JDBCDriver {
     return `"${identifier}"`;
   }
 
+  private lettersNumbersSpacesDashes(str: string) {
+    return /^[A-Za-z0-9 _]*$/.test(str);
+  }
+
   public async tableColumnTypes(table: string) {
     const [databaseName, tableName] = table.split('.');
     
     try {
       let columns = await this.query(`HELP COLUMN * FROM ${tableName}`, []);
-      
       console.log('query columns finish');
       if (!columns.length) {
         return [];
       }
+
       columns = columns.map((c: any) => {
-        const { 'Column Name': columnName, Type: dataType } = c;
-        
-        if (!columnName || !dataType) {
+        const { 'Column Name': columnName, Type: dataType, 'Primary?': keyType } = c;
+
+        if (!columnName || !dataType || !this.lettersNumbersSpacesDashes(columnName.trim())) {
           return null;
         }
-        return { name: columnName.trim(), type: this.toGenericType(dataType.trim()) };
+        
+        console.log(columnName.trim(), dataType.trim(), `is priamry key ? ${keyType?.trim() === 'P' ? 'yes' : 'no'}`);
+
+        return { name: columnName.trim(), type: this.toGenericType(dataType.trim()), attributes: keyType?.trim() === 'P' ? ['primaryKey'] : [] };
       }).filter(x => x !== null);
       return columns;
     } catch (error) {
       console.log('test', error);
+      await this.getNumberOfListerners();
     }
     return [];
   }
 
+  public async getNumberOfListerners() {
+    console.log(`NUMBER CONNECTION ON IS : ${this.pool.size}`);
+  }
+
   public async getTablesQuery(databaseName: string) {
     try {
-      const response = await this.query(`SELECT TOP 100 
+      const response = await this.query(`SELECT TOP 20 
                                           DATABASENAME AS "database",
                                           TABLENAME AS "tableName",
                                           FROM dbc.tables
@@ -167,7 +179,7 @@ export class TeradataDriver extends JDBCDriver {
     const databaseName = this.config.database;
     const allTables: ShowTableRow[] = [];
 
-    const results: any = await this.query(`SELECT TOP 100 
+    const results: any = await this.query(`SELECT TOP 20 
                                           DATABASENAME AS "database",
                                           TABLENAME AS "tableName"
                                           FROM dbc.tables
@@ -204,7 +216,7 @@ export class TeradataDriver extends JDBCDriver {
         if (!(database in metadata) || !database || !tableName) {
           metadata[database] = {};
         }
-        console.log(`requests ${database}.${tableName}`)
+        console.log(`requests ${database}.${tableName}`);
         const columns = await this.tableColumnTypes(`${database}.${tableName}`);
         console.log('table finish:', table);
         if (columns.length) {

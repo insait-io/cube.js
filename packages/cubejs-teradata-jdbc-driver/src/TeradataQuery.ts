@@ -33,28 +33,29 @@ export class TeradataQuery extends BaseQuery {
 
   //  TO CHECK
   public timeStampCast(value: string) {
-    console.log('timeStamp timeStampCast', value);
     return `CAST(OREPLACE(OREPLACE(${value}, 'T', ' '), 'Z', '') AS TIMESTAMP(3))`;
   }
 
-  //  TODO
+  // TO CHECK
   public dateTimeCast(value: string) {
-    console.log('timeStamp dateTimeCast', value);
     return `CAST(OREPLACE(OREPLACE(${value}, 'T', ' '), 'Z', '') AS TIMESTAMP(3))`;
   }
 
+  // TO CHECK
   public subtractInterval(date: string, interval: string) {
     const [number, type] = this.parseInterval(interval);
     console.log(`(${date} - INTERVAL '${number}' ${type})`);
     return `(${date} - INTERVAL '${number}' ${type})`;
   }
 
+  // TO CHECK
   public addInterval(date: string, interval: string) {
     const [number, type] = this.parseInterval(interval);
     console.log(`(${date} + INTERVAL '${number}' ${type})`);
     return `(${date} + INTERVAL '${number}' ${type})`;
   }
 
+  // TO CHECK
   public timeGroupedColumn(granularity: string, dimension: string): string {
     console.log(`TRUNC(CAST(${dimension} AS TIMESTAMP(6)), '${GRANULARITY_TO_INTERVAL[granularity]}')`);
     return `TRUNC(CAST(${dimension} AS TIMESTAMP(6)), '${GRANULARITY_TO_INTERVAL[granularity]}')`;
@@ -65,11 +66,12 @@ export class TeradataQuery extends BaseQuery {
   }
 
   public groupByDimensionLimit() {
+    const RADIX = 10;
     let startWindow = 0;
     let endWindow = 1000;
-    if (this.offset && parseInt(this.offset, 10)) {
+    if (this.offset && parseInt(this.offset, RADIX)) {
       startWindow = this.rowLimit === null ? 0 : (this.rowLimit && parseInt(this.rowLimit, 10) || 0);
-      endWindow = startWindow + parseInt(this.offset, 10);
+      endWindow = startWindow + parseInt(this.offset, RADIX);
     } else {
       endWindow = this.rowLimit === null ? 0 : (this.rowLimit && parseInt(this.rowLimit, 10) || 1000);
     }

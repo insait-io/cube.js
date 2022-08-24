@@ -1,3 +1,15 @@
+
+
+
+## [1.0.4] (22-08-2022)
+Version pass the Nexus - Fix from 1.0.3
+Insert console.log to solve the "package.json" not found issue
+
+
+## [1.0.3] (22-08-2022)
+Version does not pass the Nexus - Forgot to change name of tar file
+- Insert console.log to solve the "package.json" not found issue
+
 ## [1.0.2] (17-08-2022)
 First version that passes the Nexus !
 This is a docker-squash from 1.0.1

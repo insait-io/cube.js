@@ -1,4 +1,4 @@
-FROM node:16.17.0-buster-slim AS base
+FROM node:14.18.2-buster-slim AS base
 
 ARG IMAGE_VERSION=dev
 
@@ -9,7 +9,7 @@ ENV CI=0
 RUN DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get install -y --no-install-recommends rxvt-unicode libssl1.1 curl \
-       cmake python2 python3 gcc g++ make cmake openjdk-11-jdk-headless \
+       cmake python2 python3 gcc g++ make cmake openjdk-11-jdk-headless vim strace \
     && npm config set python /usr/bin/python2.7 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -182,5 +182,11 @@ RUN ln -s  /cubejs/rust/cubestore/bin/cubestore-dev /usr/local/bin/cubestore-dev
 WORKDIR /cube/conf
 
 EXPOSE 4000
+
+#INSAIT additional
+RUN tar -czvf /cubejs/insait.tar.gz /cubejs/node_modules/shelljs /cubejs/packages/cubejs-playground/build/static/js/1.9d9ab345.chunk.js /cubejs/packages/cubejs-playground/build/static/js/22.36de0e3d.chunk.js /cubejs/packages/cubejs-backend-native/Cargo.lock 
+RUN mv /cubejs/insait.tar.gz insait
+RUN rm -rf /cubejs/node_modules/shelljs
+RUN rm /cubejs/packages/cubejs-playground/build/static/js/1.9d9ab345.chunk.js /cubejs/packages/cubejs-playground/build/static/js/22.36de0e3d.chunk.js /cubejs/packages/cubejs-backend-native/Cargo.lock 
 
 CMD ["cubejs", "server"]
