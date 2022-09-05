@@ -1,4 +1,16 @@
+## [1.0.7] (22-08-2022) 
+- Fixed error : `this.pool.create() is not a function in JDBCDriver.js`
+- Fixed error : override `CAST([Dimensions] AS TEXT)` to `CAST([Dimensions] AS VARCHAR(5))` in TeradataQuery
+- Add support of cube server helper in the cube playground
+- Update Docker file to directly start image from the pull 
+  - Use cubejs-server-wrapper.sh helps cube image to untar the tar file and start cube when start a docker.
 
+## [1.0.6] (22-08-2022)
+1.0.5 failed because java 0.1.12 did not pass
+
+
+## [1.0.5] (01-09-2022)
+Adding tables schemas in the playground for manage 4000 tables
 
 
 ## [1.0.4] (22-08-2022)

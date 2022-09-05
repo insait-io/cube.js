@@ -3,7 +3,7 @@ version: '2.2'
 services:
   cube:
     # image: cubejs/cube:latest
-    image: insait/cube.js:1.0.3
+    image: insait/cube.js:1.0.12.1
     ports:
       - 4000:4000  # Cube.js API and Developer Playground
       - 3000:3000  # Dashboard app, if created

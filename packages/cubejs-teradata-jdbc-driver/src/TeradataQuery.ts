@@ -138,4 +138,8 @@ export class TeradataQuery extends BaseQuery {
   public defaultRefreshKeyRenewalThreshold() {
     return 120;
   }
+
+  public castToString(sql: any): string {
+    return `CAST(${sql} as VARCHAR(1024))`;
+  }
 }

@@ -55,6 +55,10 @@ export default function Header({ selectedKeys }) {
             <Link to="/schema">Schema</Link>
           </StyledMenuItem>
 
+           <StyledMenuItem key="/tables">
+            <Link to="/tables">Tables</Link>
+          </StyledMenuItem>
+
           <StyledMenuButton
             key="slack"
             href="https://slack.cube.dev"

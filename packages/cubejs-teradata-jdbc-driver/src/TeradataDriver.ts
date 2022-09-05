@@ -27,7 +27,7 @@ async function resolveJDBCDriver(): Promise<string> {
   return fileExistsOr(
     path.join(process.cwd(), 'terajdbc4.jar'),
     async () => fileExistsOr(path.join(__dirname, '..', '..', 'download', 'terajdbc4.jar'), async () => {
-      throw new Error('Please place terajdbc4.jar inside the container in /cubejs/packages/cubejs/teradata-jdbc-driver/download');
+      throw new Error('Please place terajdbc4.jar inside the container in /cubejs/packages/cubejs-teradata-jdbc-driver/download');
     })
   );
 }
@@ -38,34 +38,28 @@ type ShowTableRow = {
 };
 
 const TeradataToGenericType: Record<string, string> = {
-  A1: 'ARRAY', // not supported
-  AN: 'MULTI-DIMENSIONAL ARRAY', // not supported
-  AT: 'time',
-  BF: 'BYTE', // not supported
-  BO: 'BLOB', // not supported
-  BV: 'VARBYTE', // not supported
-  CF: 'CHARACTER',
-  CO: 'CLOB',
-  CV: 'varchar',
-  D: 'dec',
-  DA: 'date',
+  AT: 'TIME',
+  CF: 'string',
+  CV: 'VARCHAR',
+  D: 'DECIMAL',
+  DA: 'DATE',
   DH: 'INTERVAL DAY TO HOUR',
   DM: 'INTERVAL DAY TO MINUTE',
   DS: 'INTERVAL DAY TO SECOND',
   DY: 'INTERVAL DAY',
-  F: 'numb',
+  F: 'FLOAT',
   HM: 'INTERVAL HOUR TO MINUTE',
   HS: 'INTERVAL HOUR TO SECOND',
   HR: 'INTERVAL HOUR',
-  I: 'int',
-  I1: 'int',
-  I2: 'int',
+  I: 'INTEGER',
+  I1: 'BYTEINT',
+  I2: 'SMALLINT',
   I8: 'bigint',
-  JN: 'JSON', // not supported
-  MI: 'INTERVAL MINUTE', 
+  JN: 'JSON',
+  MI: 'INTERVAL MINUTE',
   MO: 'INTERVAL MONTH',
   MS: 'INTERVAL MINUTE TO SECOND',
-  N: 'numb',
+  N: 'NUMBER',
   PD: 'PERIOD(DATE)',
   PM: 'PERIOD(TIMESTAMP WITH TIME ZONE)',
   PS: 'PERIOD(TIMESTAMP)',
@@ -80,6 +74,16 @@ const TeradataToGenericType: Record<string, string> = {
   YM: 'INTERVAL YEAR TO MONTH',
   YR: 'INTERVAL YEAR',
   '++': 'TD_ANYTYPE'
+};
+
+const TeradataToAllowedCubeNumbersType: Record<string, string> = {
+  FLOAT: 'numb',
+  DECIMAL: 'dec',
+  INTEGER: 'int',
+  BYTEINT: 'int',
+  SMALLINT: 'int',
+  BIGINT: 'int',
+  NUMBER: 'numb',
 };
 
 export class TeradataDriver extends JDBCDriver {
@@ -130,37 +134,42 @@ export class TeradataDriver extends JDBCDriver {
     
     try {
       let columns = await this.query(`HELP COLUMN * FROM ${tableName}`, []);
-      console.log('query columns finish');
+      
       if (!columns.length) {
         return [];
       }
 
-      columns = columns.map((c: any) => {
+      columns = columns.map((c: any, index) => {
         const { 'Column Name': columnName, Type: dataType, 'Primary?': keyType } = c;
+        let name = columnName.trim();
 
-        if (!columnName || !dataType || !this.lettersNumbersSpacesDashes(columnName.trim())) {
+        if (!columnName || !dataType) {
           return null;
         }
-        
-        console.log(columnName.trim(), dataType.trim(), `is priamry key ? ${keyType?.trim() === 'P' ? 'yes' : 'no'}`);
 
-        return { name: columnName.trim(), type: this.toGenericType(dataType.trim()), attributes: keyType?.trim() === 'P' ? ['primaryKey'] : [] };
+        if (!this.lettersNumbersSpacesDashes(name)) {
+          name = `unknown_${index}_${name}`;
+        }
+
+        const genericType = this.toGenericType(dataType.trim());
+        const columnType = this.toAllowdedNumber(genericType) || genericType;
+        const isPrimaryKey = keyType?.trim() === 'P';
+
+        console.log(name, columnType, `is priamry key ? ${keyType?.trim() === 'P' ? 'yes' : 'no'}`);
+
+        return { name, type: columnType, attributes: isPrimaryKey ? ['primaryKey'] : [] };
       }).filter(x => x !== null);
       return columns;
     } catch (error) {
       console.log('test', error);
-      await this.getNumberOfListerners();
     }
     return [];
   }
 
-  public async getNumberOfListerners() {
-    console.log(`NUMBER CONNECTION ON IS : ${this.pool.size}`);
-  }
-
   public async getTablesQuery(databaseName: string) {
     try {
-      const response = await this.query(`SELECT TOP 20 
+      // Only SELECT VIEWS (tabkeKind=V)
+      const response = await this.query(`SELECT 
                                           DATABASENAME AS "database",
                                           TABLENAME AS "tableName",
                                           FROM dbc.tables
@@ -179,7 +188,7 @@ export class TeradataDriver extends JDBCDriver {
     const databaseName = this.config.database;
     const allTables: ShowTableRow[] = [];
 
-    const results: any = await this.query(`SELECT TOP 20 
+    const results: any = await this.query(`SELECT 
                                           DATABASENAME AS "database",
                                           TABLENAME AS "tableName"
                                           FROM dbc.tables
@@ -197,13 +206,16 @@ export class TeradataDriver extends JDBCDriver {
   }
 
   public toGenericType(columnType: string): string {
-    const type = TeradataToGenericType[columnType] || super.toGenericType(columnType);
-    return type;
+    return TeradataToGenericType[columnType] || super.toGenericType(columnType);
+  }
+
+  public toAllowdedNumber(columnType: string): string {
+    return TeradataToAllowedCubeNumbersType[columnType];
   }
 
   public async tablesSchema() {
     const tables = await this.getTables();
-    console.log('get tables finish');
+
     const metadata: Record<string, Record<string, object>> = {};
 
     if (!tables.length) {
@@ -216,9 +228,9 @@ export class TeradataDriver extends JDBCDriver {
         if (!(database in metadata) || !database || !tableName) {
           metadata[database] = {};
         }
-        console.log(`requests ${database}.${tableName}`);
+        console.log(`Request start: ${database}.${tableName}`);
         const columns = await this.tableColumnTypes(`${database}.${tableName}`);
-        console.log('table finish:', table);
+        console.log('Request finish:', table);
         if (columns.length) {
           metadata[database][tableName] = columns;
         }
@@ -226,5 +238,28 @@ export class TeradataDriver extends JDBCDriver {
     }
     
     return metadata;
+  }
+
+  protected async queryPromised(query: any, cancelObj: any, options: any) {
+    options = options || {};
+    try {
+      const conn = await this.pool.acquire();
+      
+      try {
+        const prepareConnectionQueries = options.prepareConnectionQueries || [];
+        for (let i = 0; i < prepareConnectionQueries.length; i++) {
+          await this.executeStatement(conn, prepareConnectionQueries[i], null);
+        }
+        return await this.executeStatement(conn, query, cancelObj);
+      } finally {
+        // await this.pool.release(conn);
+      }
+    } catch (ex: any) {
+      if (ex.cause) {
+        throw new Error(ex.cause.getMessageSync());
+      } else {
+        throw ex;
+      }
+    }
   }
 }
