@@ -183,7 +183,7 @@ export class ScaffoldingSchema {
       tableName,
       schema,
       table,
-      measures: this.numberMeasures(tableDefinition),
+      measures: [],
       dimensions,
       drillMembers: this.drillMembers(dimensions),
       joins: includeJoins ? this.joins(tableName, tableDefinition) : []
@@ -238,7 +238,7 @@ export class ScaffoldingSchema {
 
   protected dimensionColumns(tableDefinition: any) {
     const dimensionColumns = tableDefinition.filter(
-      column => !column.name.startsWith('_') && this.columnType(column) === 'string' ||
+      column => !column.name.startsWith('_') && this.columnType(column) === 'number' || this.columnType(column) === 'string' ||
         column.attributes?.includes('primaryKey') ||
         column.name.toLowerCase() === 'id'
     );
@@ -257,7 +257,7 @@ export class ScaffoldingSchema {
 
   protected joins(tableName: TableName, tableDefinition) {
     return R.unnest(tableDefinition
-      .filter(column => (column.name.match(new RegExp(idRegex, 'i')) && column.name.toLowerCase() !== 'id'))
+      .filter(column => column.attributes?.includes('primaryKey') || (column.name.match(new RegExp(idRegex, 'i')) && column.name.toLowerCase() !== 'id'))
       .map(column => {
         const withoutId = column.name.replace(new RegExp(idRegex, 'i'), '');
         const tablesToJoin = this.tableNamesToTables[withoutId] ||

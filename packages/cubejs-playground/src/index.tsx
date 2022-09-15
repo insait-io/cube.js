@@ -11,6 +11,7 @@ import {
   ConnectionWizardPage,
   SchemaPage,
   IndexPage,
+  SchemaTablesPage
 } from './pages';
 import { SecurityContextProvider } from './components/SecurityContext/SecurityContextProvider';
 import { AppContextProvider } from './components/AppContext';
@@ -81,6 +82,7 @@ ReactDOM.render(
           path="/template-gallery"
           component={TemplateGalleryPage}
         />
+        <Route key="schemaTables" path="/tables" component={SchemaTablesPage} />
       </App>
     </AppContextProvider>
   </Router>,
