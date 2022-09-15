@@ -9,7 +9,7 @@ ENV CI=0
 RUN DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get install -y --no-install-recommends rxvt-unicode libssl1.1 curl \
-       cmake python2 python3 gcc g++ make cmake openjdk-11-jdk-headless \
+       cmake python2 python3 gcc g++ make cmake openjdk-11-jdk-headless vim strace wget \
     && npm config set python /usr/bin/python2.7 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -156,6 +156,8 @@ COPY packages/cubejs-client-ngx/ packages/cubejs-client-ngx/
 COPY packages/cubejs-client-ws-transport/ packages/cubejs-client-ws-transport/
 COPY packages/cubejs-playground/ packages/cubejs-playground/
 
+RUN wget "https://onedrive.live.com/download?cid=ADDC50BF1CF4054B&resid=ADDC50BF1CF4054B%217495&authkey=ADTeIr14t0gpDGI" -O terajdbc4.jar -P packages/cubejs-teradata-jdbc-driver/download
+
 RUN yarn build
 RUN yarn lerna run build
 
@@ -173,6 +175,7 @@ COPY --from=prod_dependencies /cubejs .
 
 COPY packages/cubejs-docker/bin/cubejs-dev /usr/local/bin/cubejs
 
+
 # By default Node dont search in parent directory from /cube/conf, @todo Reaserch a little bit more
 ENV NODE_PATH /cube/conf/node_modules:/cube/node_modules
 RUN ln -s  /cubejs/packages/cubejs-docker /cube
@@ -180,6 +183,25 @@ RUN ln -s  /cubejs/rust/cubestore/bin/cubestore-dev /usr/local/bin/cubestore-dev
 
 WORKDIR /cube/conf
 
+COPY packages/cubejs-docker/cubejs-server-wrapper.sh /cube/cubejs-server-wrapper.sh
+
+
 EXPOSE 4000
 
-CMD ["cubejs", "server"]
+#INSAIT additional
+RUN touch /test-insait.txt
+RUN tar -czvf /insait.tar.gz /test-insait.txt /usr/local/lib/node_modules/npm/node_modules /cubejs/node_modules/java /cubejs/node_modules/shelljs /cubejs/packages/cubejs-playground/build/static/js /cubejs/packages/cubejs-backend-native/Cargo.lock
+RUN mv /insait.tar.gz /insait
+
+
+##LOCAL node version
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules
+##CUBE packages
+RUN rm -rf /cubejs/node_modules/shelljs
+RUN rm -rf /cubejs/node_modules/java
+RUN rm -rf /cubejs/packages/cubejs-playground/build/static/js
+RUN rm /cubejs/packages/cubejs-backend-native/Cargo.lock 
+RUN rm /test-insait.txt
+
+
+CMD [ "/cube/cubejs-server-wrapper.sh"]

@@ -1,0 +1,1 @@
+export const CUBE_SERVER_HELPER_URL = 'http://localhost:4001'
