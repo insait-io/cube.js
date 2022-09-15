@@ -183,7 +183,7 @@ export class ScaffoldingSchema {
       tableName,
       schema,
       table,
-      measures: this.numberMeasures(tableDefinition),
+      measures: [],
       dimensions,
       drillMembers: this.drillMembers(dimensions),
       joins: includeJoins ? this.joins(tableName, tableDefinition) : []
@@ -238,7 +238,7 @@ export class ScaffoldingSchema {
 
   protected dimensionColumns(tableDefinition: any) {
     const dimensionColumns = tableDefinition.filter(
-      column => !column.name.startsWith('_') && this.columnType(column) === 'string' ||
+      column => !column.name.startsWith('_') && this.columnType(column) === 'number' || this.columnType(column) === 'string' ||
         column.attributes?.includes('primaryKey') ||
         column.name.toLowerCase() === 'id'
     );

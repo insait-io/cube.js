@@ -9,7 +9,7 @@ ENV CI=0
 RUN DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get install -y --no-install-recommends rxvt-unicode libssl1.1 curl \
-       cmake python2 python3 gcc g++ make cmake openjdk-11-jdk-headless \
+       cmake python2 python3 gcc g++ make cmake openjdk-11-jdk-headless vim strace wget \
     && npm config set python /usr/bin/python2.7 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -90,6 +90,21 @@ RUN yarn policies set-version v1.22.5
 # We are doing version bump without updating lock files for the docker package.
 #RUN yarn install --frozen-lockfile
 FROM base as prod_base_dependencies
+
+# When building the Docker on M1 MacBook Pro '14 Monterey 12.1, we get
+# the following error:
+# 114 101.7 gyp WARN EACCES current user ("nobody") does not have permission to access the dev dir "/root/.cache/node-gyp/14.18.2"
+# 114 101.7 gyp WARN EACCES attempting to reinstall using temporary dev dir "/usr/local/lib/node_modules/lerna/node_modules/@parcel/watcher/.node-gyp"
+# 114 101.7 gyp WARN install got an error, rolling back install
+# 114 101.7 gyp ERR! configure error
+# 114 101.7 gyp ERR! stack Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/lerna/node_modules/@parcel/watcher/.node-gyp'
+#
+# This is worked around by setting the npm user as root.
+# See this for more information:
+# https://stackoverflow.com/questions/44633419/no-access-permission-error-with-npm-global-install-on-docker-image
+#
+RUN npm -g config set user root
+
 RUN npm install -g lerna patch-package
 RUN yarn install --prod
 
@@ -156,6 +171,9 @@ COPY packages/cubejs-client-ngx/ packages/cubejs-client-ngx/
 COPY packages/cubejs-client-ws-transport/ packages/cubejs-client-ws-transport/
 COPY packages/cubejs-playground/ packages/cubejs-playground/
 
+# Fetch Teradata JDBC driver.
+RUN wget "https://onedrive.live.com/download?cid=ADDC50BF1CF4054B&resid=ADDC50BF1CF4054B%217495&authkey=ADTeIr14t0gpDGI" -O terajdbc4.jar -P packages/cubejs-teradata-jdbc-driver/download
+
 RUN yarn build
 RUN yarn lerna run build
 
@@ -173,6 +191,7 @@ COPY --from=prod_dependencies /cubejs .
 
 COPY packages/cubejs-docker/bin/cubejs-dev /usr/local/bin/cubejs
 
+
 # By default Node dont search in parent directory from /cube/conf, @todo Reaserch a little bit more
 ENV NODE_PATH /cube/conf/node_modules:/cube/node_modules
 RUN ln -s  /cubejs/packages/cubejs-docker /cube
@@ -180,6 +199,22 @@ RUN ln -s  /cubejs/rust/cubestore/bin/cubestore-dev /usr/local/bin/cubestore-dev
 
 WORKDIR /cube/conf
 
+COPY packages/cubejs-docker/cubejs-server-wrapper.sh /cube/cubejs-server-wrapper.sh
+
+
 EXPOSE 4000
 
-CMD ["cubejs", "server"]
+# Insait additional
+RUN tar -czvf /insait.tar.gz /usr/local/lib/node_modules/npm/node_modules /cubejs/node_modules/java /cubejs/node_modules/shelljs /cubejs/packages/cubejs-playground/build/static/js /cubejs/packages/cubejs-backend-native/Cargo.lock
+RUN mv /insait.tar.gz /insait
+
+# Local node version
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules
+
+# Cube packages
+RUN rm -rf /cubejs/node_modules/shelljs
+RUN rm -rf /cubejs/node_modules/java
+RUN rm -rf /cubejs/packages/cubejs-playground/build/static/js
+RUN rm /cubejs/packages/cubejs-backend-native/Cargo.lock 
+
+CMD [ "/cube/cubejs-server-wrapper.sh"]
